@@ -17,8 +17,18 @@ type module_ = {
   mdiff : (Types.module_declaration, module_modification) t;
 }
 
+and modtype = {
+  mtname : string;
+  mtdiff : (Types.modtype_declaration, module_modification) t;
+}
+
 and module_modification = Unsupported | Supported of sig_item list
-and sig_item = Value of value | Module of module_ | Type of type_
+
+and sig_item =
+  | Value of value
+  | Module of module_
+  | Type of type_
+  | Modtype of modtype
 
 val interface :
   module_name:string ->
