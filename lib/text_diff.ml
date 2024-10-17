@@ -101,8 +101,7 @@ let rec process_module_type_diff module_path (module_type_diff : Diff.modtype)
       String_map.add module_path
         [ { orig = []; new_ = [ "<unsupported change>" ] } ]
         acc
-  | Modified (Supported changes) ->
-      module_modification_changes module_path changes acc
+  | Modified (Supported changes) -> signature_changes module_path changes acc
 
 and process_module_diff module_path (module_diff : Diff.module_) acc =
   match module_diff.mdiff with
@@ -124,10 +123,9 @@ and process_module_diff module_path (module_diff : Diff.module_) acc =
       String_map.update module_path
         (function None -> Some diff | Some existing -> Some (existing @ diff))
         acc
-  | Modified (Supported changes) ->
-      module_modification_changes module_path changes acc
+  | Modified (Supported changes) -> signature_changes module_path changes acc
 
-and module_modification_changes module_path items acc =
+and signature_changes module_path items acc =
   List.fold_left
     (fun acc' change ->
       match (change : Diff.sig_item) with

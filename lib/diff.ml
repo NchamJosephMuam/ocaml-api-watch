@@ -19,15 +19,15 @@ type type_ = {
 
 type module_ = {
   mname : string;
-  mdiff : (module_declaration, module_modification) t;
+  mdiff : (module_declaration, signature_modification) t;
 }
 
 and modtype = {
   mtname : string;
-  mtdiff : (modtype_declaration, module_modification) t;
+  mtdiff : (modtype_declaration, signature_modification) t;
 }
 
-and module_modification = Unsupported | Supported of sig_item list
+and signature_modification = Unsupported | Supported of sig_item list
 
 and sig_item =
   | Value of value
