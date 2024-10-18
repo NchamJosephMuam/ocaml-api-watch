@@ -80,50 +80,35 @@ let process_type_diff (type_diff : Diff.type_) =
         };
       ]
 
-let rec process_module_type_diff module_path (module_type_diff : Diff.modtype)
-    acc =
-  match module_type_diff.mtdiff with
+let rec process_sig_diff :
+    type a. _ -> (string -> a -> string list) -> (a, _) Diff.t * _ -> _ -> _ =
+ fun path to_lines ((diff : (a, _) Diff.t), name) acc ->
+  match diff with
   | Added curr_mtd ->
-      let diff =
-        [ { orig = []; new_ = mtd_to_lines module_type_diff.mtname curr_mtd } ]
-      in
-      String_map.update module_path
+      let diff = [ { orig = []; new_ = to_lines name curr_mtd } ] in
+      String_map.update path
         (function None -> Some diff | Some existing -> Some (existing @ diff))
         acc
   | Removed ref_mtd ->
-      let diff =
-        [ { orig = mtd_to_lines module_type_diff.mtname ref_mtd; new_ = [] } ]
-      in
-      String_map.update module_path
+      let diff = [ { orig = to_lines name ref_mtd; new_ = [] } ] in
+      String_map.update path
         (function None -> Some diff | Some existing -> Some (existing @ diff))
         acc
-  | Modified Unsupported ->
-      String_map.add module_path
+  | Modified Diff.Unsupported ->
+      String_map.add path
         [ { orig = []; new_ = [ "<unsupported change>" ] } ]
         acc
-  | Modified (Supported changes) -> signature_changes module_path changes acc
+  | Modified (Supported changes) -> signature_changes path changes acc
+
+and process_module_type_diff module_path (module_type_diff : Diff.modtype) acc =
+  process_sig_diff module_path mtd_to_lines
+    (module_type_diff.mtdiff, module_type_diff.mtname)
+    acc
 
 and process_module_diff module_path (module_diff : Diff.module_) acc =
-  match module_diff.mdiff with
-  | Modified Unsupported ->
-      String_map.add module_path
-        [ { orig = []; new_ = [ "<unsupported change>" ] } ]
-        acc
-  | Added curr_md ->
-      let diff =
-        [ { orig = []; new_ = md_to_lines module_diff.mname curr_md } ]
-      in
-      String_map.update module_path
-        (function None -> Some diff | Some existing -> Some (existing @ diff))
-        acc
-  | Removed ref_md ->
-      let diff =
-        [ { orig = md_to_lines module_diff.mname ref_md; new_ = [] } ]
-      in
-      String_map.update module_path
-        (function None -> Some diff | Some existing -> Some (existing @ diff))
-        acc
-  | Modified (Supported changes) -> signature_changes module_path changes acc
+  process_sig_diff module_path md_to_lines
+    (module_diff.mdiff, module_diff.mname)
+    acc
 
 and signature_changes module_path items acc =
   List.fold_left
