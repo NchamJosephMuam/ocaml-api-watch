@@ -51,15 +51,20 @@ end)
 let extract_items items =
   List.fold_left
     (fun tbl item ->
+      let visibility = Types.item_visibility item in
       match item with
       | Sig_module (id, _, mod_decl, _, _) ->
-          Sig_item_map.add (Module_item, Ident.name id) (Mod mod_decl) tbl
+        if visibility = Types.Exported then
+          Sig_item_map.add (Module_item, Ident.name id) (Mod mod_decl) tbl else tbl
       | Sig_modtype (id, mtd_decl, _) ->
-          Sig_item_map.add (Modtype_item, Ident.name id) (Modtype mtd_decl) tbl
+        if visibility = Types.Exported then
+          Sig_item_map.add (Modtype_item, Ident.name id) (Modtype mtd_decl) tbl else tbl
       | Sig_value (id, val_des, _) ->
-          Sig_item_map.add (Value_item, Ident.name id) (Val val_des) tbl
+        if visibility = Types.Exported then
+          Sig_item_map.add (Value_item, Ident.name id) (Val val_des) tbl else tbl
       | Sig_type (id, type_decl, _, _) ->
-          Sig_item_map.add (Type_item, Ident.name id) (Typ (type_decl, id)) tbl
+        if visibility = Types.Exported then
+          Sig_item_map.add (Type_item, Ident.name id) (Typ (type_decl, id)) tbl else tbl
       | _ -> tbl)
     Sig_item_map.empty items
 
@@ -104,6 +109,7 @@ let value_item ~typing_env ~name ~reference ~current =
   | Some (Val reference), None ->
       Some (Value { vname = name; vdiff = Removed reference })
   | None, Some (Val current) ->
+    
       Some (Value { vname = name; vdiff = Added current })
   | Some (Val reference), Some (Val current) -> (
       let val_coercion1 () =
